@@ -126,12 +126,15 @@ class CoAuthorsPlus_Command extends WP_CLI_Command {
 	public function assign_coauthors( $args, $assoc_args ) {
 		global $coauthors_plus;
 
+		add_filter( 'posts_groupby', function( $groupby ) { return ''; } );
+
 		$defaults = array(
 				'meta_key'         => '_original_import_author',
 				'post_type'        => 'post',
 				'order'            => 'ASC',
 				'orderby'          => 'ID',
 				'posts_per_page'   => 100,
+				'no_found_rows'	   => true,
 				'paged'            => 1,
 				'append_coauthors' => false,
 			);
@@ -149,6 +152,7 @@ class CoAuthorsPlus_Command extends WP_CLI_Command {
 
 		$posts = new WP_Query( $this->args );
 		while ( $posts->post_count ) {
+			wp_defer_term_counting(true);
 
 			foreach ( $posts->posts as $single_post ) {
 				$posts_total++;
@@ -184,6 +188,7 @@ class CoAuthorsPlus_Command extends WP_CLI_Command {
 				clean_post_cache( $single_post->ID );
 			}
 
+			wp_defer_term_counting(false);
 			$this->args['paged']++;
 			$this->stop_the_insanity();
 			$posts = new WP_Query( $this->args );
